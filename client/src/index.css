@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-secondary-200;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .chat-container {
+    @apply max-w-4xl mx-auto h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100;
+  }
+  
+  .message-bubble {
+    @apply rounded-2xl px-4 py-3 max-w-[85%] break-words;
+  }
+  
+  .user-message {
+    @apply bg-primary-500 text-white ml-auto;
+  }
+  
+  .bot-message {
+    @apply bg-white text-secondary-800 shadow-sm border border-secondary-200;
+  }
+  
+  .typing-indicator {
+    @apply flex space-x-1 px-4 py-3;
+  }
+  
+  .typing-dot {
+    @apply w-2 h-2 bg-secondary-400 rounded-full animate-pulse;
+  }
+  
+  .suggestion-chip {
+    @apply inline-block bg-white border border-secondary-300 text-secondary-700 px-3 py-1.5 rounded-full text-sm hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition-colors cursor-pointer;
+  }
+  
+  .market-card {
+    @apply bg-white rounded-xl p-4 shadow-sm border border-secondary-200 hover:shadow-md transition-shadow;
+  }
+  
+  .metric-value {
+    @apply text-2xl font-bold text-secondary-900;
+  }
+  
+  .metric-label {
+    @apply text-sm text-secondary-600;
+  }
+  
+  .metric-change {
+    @apply text-sm font-medium;
+  }
+  
+  .metric-change--positive {
+    @apply text-green-600;
+  }
+  
+  .metric-change--negative {
+    @apply text-red-600;
+  }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(203 213 225);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(148 163 184);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Markdown content styling */
+.markdown-content {
+  @apply prose prose-sm max-w-none;
+}
+
+.markdown-content h1 {
+  @apply text-xl font-bold text-secondary-900 mb-3 mt-4;
+}
+
+.markdown-content h2 {
+  @apply text-lg font-semibold text-secondary-900 mb-2 mt-3;
+}
+
+.markdown-content h3 {
+  @apply text-base font-semibold text-secondary-800 mb-2 mt-2;
+}
+
+.markdown-content p {
+  @apply mb-3 text-secondary-700 leading-relaxed;
+}
+
+.markdown-content ul, .markdown-content ol {
+  @apply mb-3 ml-4 space-y-1;
+}
+
+.markdown-content li {
+  @apply text-secondary-700;
+}
+
+.markdown-content code {
+  @apply bg-secondary-100 text-secondary-800 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.markdown-content pre {
+  @apply bg-secondary-900 text-secondary-100 p-3 rounded-lg overflow-x-auto text-sm;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-primary-400 pl-4 italic text-secondary-600;
+}
+
+.markdown-content strong {
+  @apply font-semibold text-secondary-900;
+}
+
+.markdown-content a {
+  @apply text-primary-600 hover:text-primary-700 underline;
+}
+
+.markdown-content table {
+  @apply w-full border-collapse border border-secondary-300 rounded-lg overflow-hidden mb-3;
+}
+
+.markdown-content th {
+  @apply bg-secondary-100 border border-secondary-300 px-3 py-2 text-left font-semibold text-secondary-900;
+}
+
+.markdown-content td {
+  @apply border border-secondary-300 px-3 py-2 text-secondary-700;
+}
