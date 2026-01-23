@@ -25,7 +25,8 @@
     "rate-limiter-flexible": "^2.4.2",
     "joi": "^17.11.0",
     "moment": "^2.29.4",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "openai": "^4.20.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",

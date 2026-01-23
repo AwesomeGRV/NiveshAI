@@ -7,6 +7,9 @@ require('dotenv').config();
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 const NiveshAI = require('./src/niveshai/NiveshAI');
 
+// Import routes
+const portfolioRoutes = require('./src/routes/portfolio');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -72,6 +75,70 @@ app.post('/api/chat', async (req, res) => {
     console.error('Chat API Error:', error);
     res.status(500).json({
       error: 'Internal server error. Please try again.',
+      success: false
+    });
+  }
+});
+
+// Portfolio management routes
+app.use('/api/portfolio', portfolioRoutes);
+
+// Market data routes
+app.get('/api/market/overview', async (req, res) => {
+  try {
+    const marketData = await niveshAI.marketDataService.getMarketOverview();
+    res.json({
+      success: true,
+      data: marketData,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Market overview error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch market data',
+      success: false
+    });
+  }
+});
+
+app.get('/api/market/news', async (req, res) => {
+  try {
+    const news = await niveshAI.externalAI.getMarketNews();
+    res.json({
+      success: true,
+      data: news,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Market news error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch market news',
+      success: false
+    });
+  }
+});
+
+app.get('/api/stock/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const stockData = await niveshAI.marketDataService.getStockData(symbol);
+    
+    if (!stockData) {
+      return res.status(404).json({
+        error: 'Stock data not found',
+        success: false
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: stockData,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Stock data error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch stock data',
       success: false
     });
   }

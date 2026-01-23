@@ -33,6 +33,8 @@ class ResponseFormatter {
         return this.formatTaxPlanning(response.data);
       case 'EDUCATIONAL':
         return this.formatEducationalContent(response.data);
+      case 'ENHANCED_AI_RESPONSE':
+        return this.formatEnhancedAIResponse(response.data);
       default:
         return this.formatGeneralResponse(response.data);
     }
@@ -301,6 +303,44 @@ class ResponseFormatter {
       content += `\n`;
     }
 
+    return content;
+  }
+
+  formatEnhancedAIResponse(data) {
+    let content = '';
+    
+    // Add the main content FIRST (most important)
+    if (data.content) {
+      content += data.content;
+    }
+    
+    // Add market data if available (after main content)
+    if (data.marketData) {
+      content += `\n\n---\n\n**Live Market Context:**\n`;
+      content += `• Nifty 50: ${data.marketData.nifty50?.current || 'N/A'} (${data.marketData.nifty50?.changePercent || 'N/A'}%)\n`;
+      content += `• Sensex: ${data.marketData.sensex?.current || 'N/A'} (${data.marketData.sensex?.changePercent || 'N/A'}%)\n`;
+      content += `• Market Sentiment: ${data.marketData.marketSentiment || 'N/A'}\n`;
+    }
+    
+    // Add RAG data summary if available
+    if (data.ragData && data.ragData.summary) {
+      content += `\n\n**Market Research:**\n${data.ragData.summary}`;
+    }
+    
+    // Add source attribution at the bottom
+    if (data.externalSource) {
+      content += `\n\n---\n\n**Sources:** ${data.externalSource}`;
+      if (data.sources && data.sources.length > 0) {
+        content += `, ${data.sources.join(', ')}`;
+      }
+    }
+    
+    // Add confidence indicator at the very bottom
+    if (data.confidence) {
+      const confidenceLevel = data.confidence > 0.8 ? 'High' : data.confidence > 0.6 ? 'Medium' : 'Low';
+      content += `\n\n**Response Confidence:** ${confidenceLevel} (${(data.confidence * 100).toFixed(0)}%)`;
+    }
+    
     return content;
   }
 

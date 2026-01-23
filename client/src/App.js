@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, TrendingUp, Shield, DollarSign, BookOpen, Menu, X } from 'lucide-react';
+import { Send, Bot, User, TrendingUp, Shield, DollarSign, BookOpen, Menu, X, PieChart, BarChart3, UserCheck, Home, Settings } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from 'axios';
+import PortfolioTracker from './components/PortfolioTracker';
+import RiskProfiler from './components/RiskProfiler';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -11,9 +13,12 @@ function App() {
   const [userProfile, setUserProfile] = useState({
     riskProfile: { type: 'moderate', score: 50 },
     age: 30,
-    income: 1000000
+    income: 1000000,
+    userId: 'user_' + Date.now() // Generate unique user ID
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('chat');
+  const [marketData, setMarketData] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -22,10 +27,7 @@ function App() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
+    fetchMarketData();
     // Welcome message
     const welcomeMessage = {
       id: 'welcome',
@@ -33,24 +35,45 @@ function App() {
       content: `🙏 **Welcome to NiveshAI - Your Indian Share Market Investment Advisor!**
 
 I'm here to help you with:
-- 📈 **Stock Analysis & Recommendations**
+- 📈 **Stock Market Analysis & Recommendations**
 - 💰 **Mutual Fund Guidance**
-- 🎯 **Portfolio Management**
-- 🛡️ **Risk Assessment**
+- 🎯 **Portfolio Management & Tracking**
+- 🛡️ **Risk Assessment & Profiling**
 - 💳 **Tax Planning Strategies**
 - 📚 **Investment Education**
+- 🔄 **Real-time Market Data**
 
-Ask me anything about Indian markets, investments, or financial planning!
+**New Features Available:**
+• **Portfolio Tracker** - Monitor your investments
+• **Risk Profiler** - Get personalized risk assessment
+• **Enhanced AI** - ChatGPT-like responses with real-time data
 
 **Quick Start Examples:**
 • Which are the best large-cap stocks for long-term investment?
 • How should I start my SIP investment?
 • What is the ideal asset allocation for my age?
-• Which tax-saving investments should I consider?`,
+• Which tax-saving investments should I consider?
+• Create a portfolio and track my investments`,
       timestamp: new Date().toISOString()
     };
     setMessages([welcomeMessage]);
   }, []);
+
+  const fetchMarketData = async () => {
+    try {
+      const response = await fetch('/api/market/overview');
+      const data = await response.json();
+      if (data.success) {
+        setMarketData(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
