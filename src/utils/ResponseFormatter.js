@@ -19,6 +19,22 @@ class ResponseFormatter {
 
   formatContent(response) {
     switch (response.type) {
+      case 'ADVANCED_STOCK_ANALYSIS':
+        return this.formatAdvancedStockAnalysis(response.data);
+      case 'ADVANCED_COMMODITY_ANALYSIS':
+        return this.formatAdvancedCommodityAnalysis(response.data);
+      case 'INTELLIGENT_INVESTMENT_ADVICE':
+        return this.formatIntelligentInvestmentAdvice(response.data);
+      case 'PRICE_INTELLIGENCE':
+        return this.formatPriceIntelligence(response.data);
+      case 'COMPREHENSIVE_ANALYSIS':
+        return this.formatComprehensiveAnalysis(response.data);
+      case 'EDUCATIONAL_EXPLANATION':
+        return this.formatEducationalExplanation(response.data);
+      case 'MARKET_INTELLIGENCE':
+        return this.formatMarketIntelligence(response.data);
+      case 'INTELLIGENT_GUIDANCE':
+        return this.formatIntelligentGuidance(response.data);
       case 'STOCK_RECOMMENDATION':
         return this.formatStockRecommendation(response.data);
       case 'MUTUAL_FUND':
@@ -352,6 +368,241 @@ class ResponseFormatter {
       content += `💡 **Try asking:**\n`;
       data.suggestions.forEach(suggestion => {
         content += `• ${suggestion}\n`;
+      });
+      content += `\n`;
+    }
+
+    return content;
+  }
+
+  formatAdvancedStockAnalysis(data) {
+    let content = `📈 **${data.stock.name} (${data.stock.symbol}) - Advanced Analysis**\n\n`;
+    
+    content += `**Current Market Status:**\n`;
+    content += `• **Current Price:** ₹${data.currentPrice}\n`;
+    content += `• **Today's Change:** ${data.changePercent} (${data.change > 0 ? '↑' : '↓'} ${Math.abs(data.change)} points)\n`;
+    content += `• **Volume:** ${data.volume}\n`;
+    content += `• **Market Cap:** ${data.marketCap}\n\n`;
+
+    if (data.priceAnalysis) {
+      content += `**Price Analysis:**\n`;
+      content += `• **Trend:** ${data.priceAnalysis.trend}\n`;
+      content += `• **Momentum:** ${data.priceAnalysis.momentum}\n`;
+      content += `• **Support:** ${data.priceAnalysis.keyLevels.support}\n`;
+      content += `• **Resistance:** ${data.priceAnalysis.keyLevels.resistance}\n`;
+      content += `• **Stop Loss:** ${data.priceAnalysis.keyLevels.stopLoss}\n\n`;
+    }
+
+    if (data.technicalIndicators) {
+      content += `**Technical Indicators:**\n`;
+      content += `• **RSI:** ${data.technicalIndicators.rsi}\n`;
+      content += `• **MACD:** ${data.technicalIndicators.macd}\n`;
+      content += `• **20 SMA:** ₹${data.technicalIndicators.movingAverages.sma20.toFixed(2)}\n`;
+      content += `• **50 SMA:** ₹${data.technicalIndicators.movingAverages.sma50.toFixed(2)}\n\n`;
+    }
+
+    if (data.tradingRecommendation) {
+      content += `**Trading Recommendation:**\n`;
+      content += `• **Action:** ${data.tradingRecommendation.action}\n`;
+      content += `• **Confidence:** ${data.tradingRecommendation.confidence}%\n`;
+      content += `• **Entry Point:** ${data.tradingRecommendation.entryPoint}\n`;
+      content += `• **Target Price:** ${data.tradingRecommendation.targetPrice}\n`;
+      content += `• **Timeframe:** ${data.tradingRecommendation.timeframe}\n`;
+      content += `• **Risk Level:** ${data.tradingRecommendation.riskLevel}\n\n`;
+    }
+
+    if (data.investmentAnalysis) {
+      content += `**Investment Analysis:**\n`;
+      content += `• **P/E Ratio:** ${data.investmentAnalysis.valuation.pe}\n`;
+      content += `• **P/B Ratio:** ${data.investmentAnalysis.valuation.pb}\n`;
+      content += `• **ROE:** ${data.investmentAnalysis.valuation.roe}%\n`;
+      content += `• **Debt/Equity:** ${data.investmentAnalysis.valuation.debtToEquity}\n`;
+      content += `• **Valuation:** ${data.investmentAnalysis.valuation.assessment}\n\n`;
+    }
+
+    if (data.fundamentalAnalysis) {
+      content += `**Business Overview:**\n`;
+      content += `${data.fundamentalAnalysis.businessOverview}\n\n`;
+      content += `**Strengths:**\n`;
+      data.fundamentalAnalysis.competitiveAdvantages.forEach(strength => {
+        content += `• ${strength}\n`;
+      });
+      content += `\n**Recent Developments:**\n`;
+      content += `${data.fundamentalAnalysis.recentDevelopments}\n\n`;
+    }
+
+    return content;
+  }
+
+  formatAdvancedCommodityAnalysis(data) {
+    let content = `💰 **${data.commodity.charAt(0).toUpperCase() + data.commodity.slice(1)} - Advanced Analysis**\n\n`;
+    
+    content += `**Current Market Status:**\n`;
+    content += `• **Current Price:** ${data.currentPrice}\n`;
+    content += `• **Today's Change:** ${data.changePercent}\n\n`;
+
+    if (data.technicalAnalysis) {
+      content += `**Technical Analysis:**\n`;
+      content += `• **Trend:** ${data.technicalAnalysis.trend}\n`;
+      content += `• **Support:** ${data.technicalAnalysis.support}\n`;
+      content += `• **Resistance:** ${data.technicalAnalysis.resistance}\n`;
+      content += `• **RSI:** ${data.technicalAnalysis.rsi}\n\n`;
+    }
+
+    if (data.priceDrivers) {
+      content += `**Price Drivers:**\n`;
+      data.priceDrivers.forEach(driver => {
+        content += `• ${driver}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.investmentOptions) {
+      content += `**Investment Options:**\n`;
+      data.investmentOptions.forEach(option => {
+        content += `• ${option}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.marketDynamics) {
+      content += `**Market Dynamics:**\n`;
+      content += `• **Supply-Demand:** ${data.marketDynamics.supplyDemand}\n`;
+      content += `• **Seasonal:** ${data.marketDynamics.seasonal}\n`;
+      content += `• **Correlation:** ${data.marketDynamics.correlation}\n`;
+      content += `• **Global:** ${data.marketDynamics.global}\n\n`;
+    }
+
+    return content;
+  }
+
+  formatIntelligentInvestmentAdvice(data) {
+    let content = `🎯 **Intelligent Investment Advice**\n\n`;
+    
+    content += `**Risk Profile:** ${data.riskProfile.charAt(0).toUpperCase() + data.riskProfile.slice(1)}\n\n`;
+
+    if (data.recommendations) {
+      content += `**Personalized Recommendations:**\n`;
+      data.recommendations.forEach(rec => {
+        content += `• **${rec.asset}** (${rec.allocation}): ${rec.reasoning}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.currentOpportunities) {
+      content += `**Current Market Opportunities:**\n`;
+      data.currentOpportunities.forEach(opp => {
+        content += `• **${opp.sector}**: ${opp.opportunity} (${opp.timeframe}, ${opp.potential} potential)\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.riskManagement) {
+      content += `**Risk Management:**\n`;
+      content += `• **Diversification:** ${data.riskManagement.diversification}\n`;
+      content += `• **Stop Loss:** ${data.riskManagement.stopLoss}\n`;
+      content += `• **Position Sizing:** ${data.riskManagement.positionSizing}\n`;
+      content += `• **Review:** ${data.riskManagement.review}\n\n`;
+    }
+
+    return content;
+  }
+
+  formatPriceIntelligence(data) {
+    let content = `💡 **Price Intelligence**\n\n`;
+    content += `${data.message}\n\n`;
+    
+    if (data.examples) {
+      content += `**Examples:**\n`;
+      data.examples.forEach(example => {
+        content += `• ${example}\n`;
+      });
+      content += `\n`;
+    }
+
+    return content;
+  }
+
+  formatComprehensiveAnalysis(data) {
+    let content = `📊 **Comprehensive Analysis**\n\n`;
+    content += `${data.message}\n\n`;
+    
+    if (data.analysisTypes) {
+      content += `**Available Analysis Types:**\n`;
+      data.analysisTypes.forEach(type => {
+        content += `• ${type}\n`;
+      });
+      content += `\n`;
+    }
+
+    return content;
+  }
+
+  formatEducationalExplanation(data) {
+    let content = `📚 **Educational Explanation**\n\n`;
+    content += `${data.message}\n\n`;
+    
+    if (data.topics) {
+      content += `**Topics I can explain:**\n`;
+      data.topics.forEach(topic => {
+        content += `• ${topic}\n`;
+      });
+      content += `\n`;
+    }
+
+    return content;
+  }
+
+  formatMarketIntelligence(data) {
+    let content = `🌐 **Market Intelligence**\n\n`;
+    
+    if (data.sentiment) {
+      content += `**Market Sentiment:** ${data.sentiment.overall} (Confidence: ${data.sentiment.confidence})\n`;
+      content += `**Outlook:** ${data.sentiment.outlook}\n\n`;
+    }
+
+    if (data.sectorPerformance) {
+      content += `**Sector Performance:**\n`;
+      Object.entries(data.sectorPerformance).forEach(([sector, performance]) => {
+        content += `• **${sector}**: ${performance}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.marketDrivers) {
+      content += `**Market Drivers:**\n`;
+      data.marketDrivers.forEach(driver => {
+        content += `• **${driver.driver}**: ${driver.impact} - ${driver.description}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.outlook) {
+      content += `**Market Outlook:**\n`;
+      content += `• **Short-term:** ${data.outlook.shortTerm}\n`;
+      content += `• **Medium-term:** ${data.outlook.mediumTerm}\n`;
+      content += `• **Long-term:** ${data.outlook.longTerm}\n\n`;
+    }
+
+    return content;
+  }
+
+  formatIntelligentGuidance(data) {
+    let content = `🤖 **Advanced AI Investment Assistant**\n\n`;
+    content += `${data.message}\n\n`;
+    
+    if (data.capabilities) {
+      content += `**My Capabilities:**\n`;
+      data.capabilities.forEach(capability => {
+        content += `${capability}\n`;
+      });
+      content += `\n`;
+    }
+
+    if (data.examples) {
+      content += `**Try these examples:**\n`;
+      data.examples.forEach(example => {
+        content += `• ${example}\n`;
       });
       content += `\n`;
     }

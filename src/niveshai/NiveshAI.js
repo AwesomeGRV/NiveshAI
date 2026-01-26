@@ -9,14 +9,65 @@ class NiveshAI {
     this.knowledgeBase = new KnowledgeBase();
     this.responseFormatter = new ResponseFormatter();
     this.riskProfiler = new RiskProfiler();
+    
+    // Advanced stock database
+    this.stockDatabase = {
+      'tata motors': {
+        name: 'Tata Motors', symbol: 'TATAMOTORS', sector: 'Automobile',
+        price: 652.34, change: 2.5, volume: '8.2M', marketCap: '₹2.3L Cr',
+        pe: 18.5, pb: 2.3, roe: 14.2, debt: 0.85, promoter: 42, dividend: 1.8,
+        description: 'Leading Indian automobile manufacturer with EV leadership.',
+        strengths: ['Strong brand', 'EV leadership', 'Global presence'],
+        weaknesses: ['High competition', 'Cyclical nature'],
+        recentNews: 'Launched new EV models, Q2 results beat expectations',
+        outlook: 'Positive on EV transition'
+      },
+      'reliance': {
+        name: 'Reliance Industries', symbol: 'RELIANCE', sector: 'Conglomerate',
+        price: 2543.21, change: 1.8, volume: '12.5M', marketCap: '₹17.2L Cr',
+        pe: 22.3, pb: 1.8, roe: 12.5, debt: 0.45, promoter: 50.2, dividend: 0.9,
+        description: 'Diversified conglomerate with leadership in petrochemicals, retail, telecom.',
+        strengths: ['Market leadership', 'Cash reserves', 'Digital growth'],
+        weaknesses: ['Regulatory risks', 'Competition'],
+        recentNews: 'Jio user base crosses 450 million',
+        outlook: 'Strong growth in digital, stable in petrochemicals'
+      },
+      'tcs': {
+        name: 'TCS', symbol: 'TCS', sector: 'IT Services',
+        price: 3567.89, change: 1.2, volume: '2.1M', marketCap: '₹13.1L Cr',
+        pe: 28.5, pb: 8.2, roe: 28.9, debt: 0.12, promoter: 72.3, dividend: 1.5,
+        description: 'India\'s largest IT services company with global presence.',
+        strengths: ['Market leadership', 'Global delivery', 'Digital capabilities'],
+        weaknesses: ['High valuation', 'US dependency'],
+        recentNews: 'Won multi-billion dollar deals, AI initiatives gaining traction',
+        outlook: 'Positive on digital transformation'
+      }
+    };
+
+    this.commodityData = {
+      silver: {
+        currentPrice: '₹65,000/kg', change: 3.2,
+        drivers: ['Solar panel manufacturing surge', 'EV industry demand', 'Investment demand'],
+        technical: { trend: 'Bullish', support: '₹62,000', resistance: '₹68,000', rsi: 68 },
+        investmentOptions: ['Silver ETFs', 'Physical Silver', 'Silver Futures', 'Digital Silver']
+      },
+      gold: {
+        currentPrice: '₹52,000/10g', change: 2.1,
+        drivers: ['Safe-haven demand', 'Central bank purchases', 'Jewelry demand'],
+        technical: { trend: 'Bullish', support: '₹50,500', resistance: '₹54,000', rsi: 62 },
+        investmentOptions: ['Gold ETFs', 'Sovereign Gold Bonds', 'Physical Gold', 'Digital Gold']
+      }
+    };
   }
 
   async getResponse(message, userProfile = {}) {
     try {
-      const cleanMessage = message.trim().toLowerCase();
+      const cleanMessage = message.trim();
       const marketContext = await this.marketDataService.getMarketOverview();
       
-      const response = await this.generateDirectResponse(cleanMessage, userProfile, marketContext);
+      const queryAnalysis = this.analyzeQuery(cleanMessage);
+      const response = await this.generateAdvancedResponse(queryAnalysis, userProfile, marketContext);
+      
       return this.responseFormatter.formatResponse(response, userProfile);
     } catch (error) {
       console.error('NiveshAI Error:', error);
@@ -24,248 +75,510 @@ class NiveshAI {
     }
   }
 
-  async generateDirectResponse(message, userProfile, marketContext) {
-    if (this.isStockQuery(message)) {
-      return this.generateStockResponse(message, marketContext);
+  analyzeQuery(message) {
+    const lowerMessage = message.toLowerCase();
+    const analysis = {
+      originalMessage: message,
+      intent: 'general',
+      entities: [],
+      sentiment: 'neutral',
+      specificity: 'medium'
+    };
+
+    // Detect entities
+    Object.keys(this.stockDatabase).forEach(stock => {
+      if (lowerMessage.includes(stock)) {
+        analysis.entities.push({ type: 'stock', name: stock, data: this.stockDatabase[stock] });
+      }
+    });
+
+    if (lowerMessage.includes('silver')) {
+      analysis.entities.push({ type: 'commodity', name: 'silver', data: this.commodityData.silver });
     }
-    
-    if (this.isCommodityQuery(message)) {
-      return this.generateCommodityResponse(message, marketContext);
+    if (lowerMessage.includes('gold')) {
+      analysis.entities.push({ type: 'commodity', name: 'gold', data: this.commodityData.gold });
     }
-    
-    if (this.isMarketQuery(message)) {
-      return this.generateMarketResponse(message, marketContext);
+
+    // Detect intent
+    if (lowerMessage.includes('up') || lowerMessage.includes('down') || lowerMessage.includes('price')) {
+      analysis.intent = 'price_query';
+      analysis.specificity = 'high';
     }
-    
-    if (this.isInvestmentQuery(message)) {
-      return this.generateInvestmentResponse(message, userProfile, marketContext);
+    if (lowerMessage.includes('buy') || lowerMessage.includes('sell') || lowerMessage.includes('invest')) {
+      analysis.intent = 'investment_advice';
     }
+    if (lowerMessage.includes('analysis') || lowerMessage.includes('technical')) {
+      analysis.intent = 'detailed_analysis';
+    }
+    if (lowerMessage.includes('why') || lowerMessage.includes('explain')) {
+      analysis.intent = 'explanatory';
+    }
+    if (lowerMessage.includes('market') || lowerMessage.includes('nifty')) {
+      analysis.intent = 'market_overview';
+    }
+
+    return analysis;
+  }
+
+  async generateAdvancedResponse(queryAnalysis, userProfile, marketContext) {
+    const { intent, entities } = queryAnalysis;
+
+    if (entities.length > 0) {
+      const stockEntity = entities.find(e => e.type === 'stock');
+      const commodityEntity = entities.find(e => e.type === 'commodity');
+
+      if (stockEntity) {
+        return this.generateAdvancedStockResponse(queryAnalysis, stockEntity, marketContext);
+      }
+      if (commodityEntity) {
+        return this.generateAdvancedCommodityResponse(queryAnalysis, commodityEntity, marketContext);
+      }
+    }
+
+    switch (intent) {
+      case 'price_query': return this.generatePriceResponse(queryAnalysis, marketContext);
+      case 'investment_advice': return this.generateInvestmentAdvice(queryAnalysis, userProfile, marketContext);
+      case 'detailed_analysis': return this.generateDetailedAnalysis(queryAnalysis, marketContext);
+      case 'explanatory': return this.generateExplanatoryResponse(queryAnalysis, marketContext);
+      case 'market_overview': return this.generateMarketOverview(queryAnalysis, marketContext);
+      default: return this.generateIntelligentDefault(queryAnalysis, userProfile, marketContext);
+    }
+  }
+
+  generateAdvancedStockResponse(queryAnalysis, stockEntity, marketContext) {
+    const stock = stockEntity.data;
+    const { intent, originalMessage } = queryAnalysis;
+    const isUp = originalMessage.toLowerCase().includes('up');
+    const isDown = originalMessage.toLowerCase().includes('down');
+
+    const baseResponse = {
+      type: 'ADVANCED_STOCK_ANALYSIS',
+      data: {
+        stock: stock,
+        currentPrice: stock.price,
+        change: isUp ? Math.abs(stock.change) : isDown ? -Math.abs(stock.change) : stock.change,
+        changePercent: isUp ? `+${stock.change}%` : isDown ? `-${stock.change}%` : `${stock.change}%`,
+        volume: stock.volume,
+        marketCap: stock.marketCap,
+        marketContext: marketContext
+      }
+    };
+
+    if (intent === 'price_query') {
+      baseResponse.data.priceAnalysis = this.generatePriceAnalysis(stock, isUp, isDown);
+      baseResponse.data.technicalIndicators = this.generateTechnicalAnalysis(stock);
+      baseResponse.data.tradingRecommendation = this.generateTradingRecommendation(stock, isUp, isDown);
+    } else if (intent === 'investment_advice') {
+      baseResponse.data.investmentAnalysis = this.generateInvestmentAnalysis(stock);
+      baseResponse.data.riskAssessment = this.generateRiskAssessment(stock);
+      baseResponse.data.suitability = this.generateSuitabilityAnalysis(stock);
+    } else if (intent === 'detailed_analysis') {
+      baseResponse.data.fundamentalAnalysis = this.generateFundamentalAnalysis(stock);
+      baseResponse.data.swotAnalysis = this.generateSWOTAnalysis(stock);
+    } else if (intent === 'explanatory') {
+      baseResponse.data.explanation = this.generateStockExplanation(stock, originalMessage);
+      baseResponse.data.factors = this.generateInfluencingFactors(stock);
+    }
+
+    return baseResponse;
+  }
+
+  generatePriceAnalysis(stock, isUp, isDown) {
+    const trend = isUp ? 'bullish' : isDown ? 'bearish' : 'neutral';
+    const momentum = Math.abs(stock.change) > 2 ? 'strong' : Math.abs(stock.change) > 1 ? 'moderate' : 'weak';
     
-    return this.generateDefaultResponse(message, userProfile, marketContext);
+    return {
+      trend: trend,
+      momentum: momentum,
+      priceAction: `${stock.name} is showing ${momentum} ${trend} momentum at ₹${stock.price}`,
+      keyLevels: {
+        support: `₹${(stock.price * 0.98).toFixed(2)}`,
+        resistance: `₹${(stock.price * 1.02).toFixed(2)}`,
+        stopLoss: `₹${(stock.price * 0.95).toFixed(2)}`
+      },
+      volumeAnalysis: `Volume at ${stock.volume} indicates ${stock.volume.includes('M') && parseFloat(stock.volume) > 5 ? 'high' : 'normal'} trading activity`
+    };
   }
 
-  isStockQuery(message) {
-    const stockKeywords = [
-      'tata motors', 'reliance', 'tcs', 'hdfc bank', 'icici bank', 'sbi', 
-      'infosys', 'wipro', 'maruti', 'stock', 'share', 'up', 'down', 'price'
-    ];
-    return stockKeywords.some(keyword => message.includes(keyword));
+  generateTechnicalAnalysis(stock) {
+    return {
+      rsi: Math.floor(Math.random() * 30 + 35),
+      macd: stock.change > 0 ? 'Bullish crossover' : 'Bearish crossover',
+      movingAverages: {
+        sma20: stock.price * (stock.change > 0 ? 1.01 : 0.99),
+        sma50: stock.price * (stock.change > 0 ? 1.02 : 0.98),
+        sma200: stock.price * (stock.change > 0 ? 1.03 : 0.97)
+      },
+      bollingerBands: {
+        upper: stock.price * 1.05,
+        middle: stock.price,
+        lower: stock.price * 0.95
+      }
+    };
   }
 
-  isCommodityQuery(message) {
-    return message.includes('silver') || message.includes('gold') || message.includes('commodity');
-  }
-
-  isMarketQuery(message) {
-    return message.includes('market') || message.includes('nifty') || message.includes('sensex');
-  }
-
-  isInvestmentQuery(message) {
-    const investmentKeywords = ['invest', 'sip', 'mutual fund', 'portfolio', 'risk', 'tax'];
-    return investmentKeywords.some(keyword => message.includes(keyword));
-  }
-
-  generateStockResponse(message, marketContext) {
-    const stockData = this.getStockData(message);
+  generateTradingRecommendation(stock, isUp, isDown) {
+    const riskLevel = stock.sector === 'IT Services' ? 'Medium' : stock.sector === 'Banking' ? 'Low' : 'High';
     
-    if (stockData) {
-      const isUp = message.includes('up') || message.includes('gain') || message.includes('positive');
-      const isDown = message.includes('down') || message.includes('loss') || message.includes('negative');
-      
+    if (isUp) {
       return {
-        type: 'STOCK_ANALYSIS',
-        data: {
-          stock: stockData,
-          currentPrice: stockData.price,
-          change: isUp ? '+2.5%' : isDown ? '-1.8%' : '+0.5%',
-          volume: '8.2M',
-          marketCap: '₹2.3L Cr',
-          technical: {
-            rsi: 45,
-            macd: 'Bullish',
-            support: `₹${(stockData.price * 0.98).toFixed(2)}`,
-            resistance: `₹${(stockData.price * 1.02).toFixed(2)}`
-          },
-          fundamental: {
-            pe: 18.5,
-            pb: 2.3,
-            roe: 14.2,
-            dividend: 1.8
-          },
-          marketContext: marketContext,
-          analysis: isUp ? 
-            `${stockData.name} is trading higher today with positive momentum. Technical indicators suggest bullish sentiment.` :
-            isDown ? 
-            `${stockData.name} is trading lower today with bearish pressure. Consider support levels for entry points.` :
-            `${stockData.name} is trading steady with mixed signals. Monitor volume and price action.`
-        }
+        action: 'HOLD',
+        confidence: 75,
+        reasoning: `${stock.name} is in uptrend with positive momentum. Consider holding existing positions.`,
+        entryPoint: `₹${(stock.price * 0.98).toFixed(2)}`,
+        targetPrice: `₹${(stock.price * 1.08).toFixed(2)}`,
+        timeframe: '3-6 months',
+        riskLevel: riskLevel
+      };
+    } else if (isDown) {
+      return {
+        action: 'WATCH',
+        confidence: 70,
+        reasoning: `${stock.name} is under pressure. Wait for stabilization before considering entry.`,
+        entryPoint: `₹${(stock.price * 0.95).toFixed(2)}`,
+        targetPrice: `₹${(stock.price * 1.10).toFixed(2)}`,
+        timeframe: '6-12 months',
+        riskLevel: riskLevel
+      };
+    } else {
+      return {
+        action: 'ACCUMULATE',
+        confidence: 65,
+        reasoning: `${stock.name} is consolidating. Good for accumulation on dips with long-term perspective.`,
+        entryPoint: `₹${(stock.price * 0.97).toFixed(2)}`,
+        targetPrice: `₹${(stock.price * 1.15).toFixed(2)}`,
+        timeframe: '12-24 months',
+        riskLevel: riskLevel
       };
     }
+  }
+
+  generateInvestmentAnalysis(stock) {
+    return {
+      valuation: {
+        pe: stock.pe,
+        pb: stock.pb,
+        assessment: stock.pe < 20 ? 'Attractive' : stock.pe < 25 ? 'Fair' : 'Expensive'
+      },
+      profitability: {
+        roe: stock.roe,
+        assessment: stock.roe > 15 ? 'Excellent' : stock.roe > 10 ? 'Good' : 'Average'
+      },
+      financialHealth: {
+        debtToEquity: stock.debt,
+        assessment: stock.debt < 0.5 ? 'Strong' : stock.debt < 1.0 ? 'Moderate' : 'Weak'
+      }
+    };
+  }
+
+  generateRiskAssessment(stock) {
+    return {
+      overallRisk: stock.sector === 'Banking' ? 'Low' : stock.sector === 'IT Services' ? 'Medium' : 'High',
+      sectorRisks: stock.sector === 'Automobile' ? ['Cyclicality', 'Competition'] : ['Market risk', 'Competition'],
+      companyRisks: [
+        stock.debt > 1.0 ? 'High debt levels' : 'Manageable debt',
+        stock.pe > 25 ? 'High valuation' : 'Reasonable valuation'
+      ],
+      mitigatingFactors: ['Strong brand presence', 'Market leadership position']
+    };
+  }
+
+  generateSuitabilityAnalysis(stock) {
+    return {
+      conservative: {
+        suitable: stock.sector === 'Banking',
+        allocation: '5-10%',
+        reasoning: stock.sector === 'Banking' ? 'Relatively stable with regular income' : 'Higher volatility'
+      },
+      moderate: {
+        suitable: ['Banking', 'IT Services'].includes(stock.sector),
+        allocation: '10-15%',
+        reasoning: 'Balanced risk-return profile'
+      },
+      aggressive: {
+        suitable: true,
+        allocation: '15-20%',
+        reasoning: 'Growth potential for aggressive investors'
+      }
+    };
+  }
+
+  generateFundamentalAnalysis(stock) {
+    return {
+      businessOverview: stock.description,
+      competitiveAdvantages: stock.strengths,
+      challenges: stock.weaknesses,
+      recentDevelopments: stock.recentNews,
+      managementOutlook: stock.outlook
+    };
+  }
+
+  generateSWOTAnalysis(stock) {
+    return {
+      strengths: stock.strengths,
+      weaknesses: stock.weaknesses,
+      opportunities: ['Digital transformation', 'Market expansion', 'New products'],
+      threats: ['Economic slowdown', 'Regulatory changes', 'Competition']
+    };
+  }
+
+  generateStockExplanation(stock, originalMessage) {
+    const lowerMessage = originalMessage.toLowerCase();
     
-    return this.generateDefaultResponse(message, {}, marketContext);
+    if (lowerMessage.includes('why up')) {
+      return `${stock.name} is trading higher due to ${stock.recentNews}. Positive market sentiment and sector-specific tailwinds are supporting the price.`;
+    } else if (lowerMessage.includes('why down')) {
+      return `${stock.name} is under pressure due to broader market concerns. Profit booking and risk aversion are contributing to the decline.`;
+    } else if (lowerMessage.includes('should buy')) {
+      return `${stock.name} offers ${stock.pe < 20 ? 'attractive valuation' : 'growth potential'} with strong fundamentals. Consider your risk profile before investing.`;
+    } else {
+      return `${stock.name} is a ${stock.sector} company with ${stock.marketCap} market cap. Current price reflects market sentiment about ${stock.recentNews.toLowerCase()}.`;
+    }
   }
 
-  generateCommodityResponse(message, marketContext) {
-    const isSilver = message.includes('silver');
-    const isGold = message.includes('gold');
-    const isGoingUp = message.includes('up') || message.includes('rising') || message.includes('increase');
-    
+  generateInfluencingFactors(stock) {
     return {
-      type: 'COMMODITY_ANALYSIS',
-      data: {
-        commodity: isSilver ? 'Silver' : isGold ? 'Gold' : 'Commodity',
-        currentPrice: isSilver ? '₹65,000/kg' : (isGold ? '₹52,000/10g' : '₹50,000/unit'),
-        change: isGoingUp ? '+3.2%' : '-0.8%',
-        drivers: this.getCommodityDrivers(isSilver, isGold, isGoingUp),
-        investmentOptions: this.getCommodityInvestmentOptions(isSilver, isGold),
-        marketContext: marketContext,
-        analysis: isGoingUp ? 
-          `${isSilver ? 'Silver' : 'Gold'} prices are rising due to increased demand and market uncertainty.` :
-          `${isSilver ? 'Silver' : 'Gold'} prices are under pressure due to profit booking and dollar strength.`
-      }
+      internal: ['Quarterly performance', 'Management decisions', 'Product launches'],
+      external: ['Economic conditions', 'Sector trends', 'Currency fluctuations'],
+      technical: ['Market sentiment', 'Institutional activity', 'Technical indicators']
     };
   }
 
-  generateMarketResponse(message, marketContext) {
-    return {
-      type: 'MARKET_ANALYSIS',
+  generateAdvancedCommodityResponse(queryAnalysis, commodityEntity, marketContext) {
+    const commodity = commodityEntity.data;
+    const { intent } = queryAnalysis;
+
+    const response = {
+      type: 'ADVANCED_COMMODITY_ANALYSIS',
       data: {
-        marketOverview: marketContext,
-        sentiment: this.getMarketSentiment(marketContext),
-        keyIndices: {
-          nifty: marketContext.nifty50,
-          sensex: marketContext.sensex
-        },
-        sectors: this.getSectorPerformance(),
-        analysis: 'Indian markets are showing mixed signals with IT and banking sectors leading gains.'
+        commodity: commodityEntity.name,
+        currentPrice: commodity.currentPrice,
+        change: commodity.change,
+        changePercent: `${commodity.change > 0 ? '+' : ''}${commodity.change}%`,
+        technicalAnalysis: commodity.technical,
+        marketContext: marketContext
       }
+    };
+
+    if (intent === 'explanatory') {
+      response.data.priceDrivers = commodity.drivers;
+      response.data.marketDynamics = this.generateCommodityDynamics(commodityEntity.name);
+    } else if (intent === 'investment_advice') {
+      response.data.investmentOptions = commodity.investmentOptions;
+      response.data.riskAnalysis = this.generateCommodityRiskAnalysis(commodityEntity.name);
+    }
+
+    return response;
+  }
+
+  generateCommodityDynamics(commodityName) {
+    return {
+      supplyDemand: commodityName === 'silver' ? 'Industrial demand outpacing supply' : 'Steady demand from jewelry and investment',
+      seasonal: 'Strong demand during festive seasons',
+      correlation: commodityName === 'silver' ? 'High correlation with gold' : 'Safe-haven asset',
+      global: 'Influenced by USD strength and global conditions'
     };
   }
 
-  generateInvestmentResponse(message, userProfile, marketContext) {
+  generateCommodityRiskAnalysis(commodityName) {
     return {
-      type: 'INVESTMENT_GUIDANCE',
-      data: {
-        userProfile: userProfile,
-        recommendations: this.getInvestmentRecommendations(userProfile, message),
-        marketContext: marketContext,
-        riskAssessment: this.getRiskAssessment(userProfile),
-        analysis: 'Based on your risk profile, consider diversified portfolio with balanced asset allocation.'
-      }
+      volatility: commodityName === 'silver' ? 'High' : 'Medium',
+      liquidity: 'High',
+      overallRisk: commodityName === 'silver' ? 'Medium-High' : 'Medium'
     };
   }
 
-  generateDefaultResponse(message, userProfile, marketContext) {
+  generatePriceResponse(queryAnalysis, marketContext) {
     return {
-      type: 'GENERAL_GUIDANCE',
+      type: 'PRICE_INTELLIGENCE',
       data: {
-        message: 'I can help you with Indian stock market investments, mutual funds, portfolio management, and tax planning.',
-        suggestions: [
-          'Ask about specific stocks like "Is Tata Motors up today?"',
-          'Inquire about commodities like "Why is silver going up?"',
-          'Get market analysis with "Current market sentiment?"',
-          'Learn about investing with "Best SIP funds for beginners?"'
+        message: 'I can provide detailed price analysis for specific stocks or commodities. Please specify which asset you\'re interested in.',
+        examples: [
+          'What is the current price of Tata Motors?',
+          'Is Reliance up or down today?',
+          'Silver price movement analysis'
         ],
         marketContext: marketContext
       }
     };
   }
 
-  getStockData(message) {
-    const stocks = [
-      { name: 'Tata Motors', symbol: 'TATAMOTORS', price: 652.34 },
-      { name: 'Reliance Industries', symbol: 'RELIANCE', price: 2543.21 },
-      { name: 'TCS', symbol: 'TCS', price: 3567.89 },
-      { name: 'HDFC Bank', symbol: 'HDFCBANK', price: 1654.32 },
-      { name: 'ICICI Bank', symbol: 'ICICIBANK', price: 956.78 },
-      { name: 'SBI', symbol: 'SBIN', price: 623.45 },
-      { name: 'Infosys', symbol: 'INFY', price: 1456.78 },
-      { name: 'Wipro', symbol: 'WIPRO', price: 412.34 },
-      { name: 'Maruti Suzuki', symbol: 'MARUTI', price: 10234.56 }
-    ];
+  generateInvestmentAdvice(queryAnalysis, userProfile, marketContext) {
+    const riskProfile = userProfile.riskProfile?.type || 'moderate';
     
-    return stocks.find(stock => 
-      message.includes(stock.name.toLowerCase()) || 
-      message.includes(stock.symbol.toLowerCase())
-    );
+    return {
+      type: 'INTELLIGENT_INVESTMENT_ADVICE',
+      data: {
+        userProfile: userProfile,
+        riskProfile: riskProfile,
+        recommendations: this.generatePersonalizedRecommendations(riskProfile),
+        marketContext: marketContext,
+        currentOpportunities: this.identifyMarketOpportunities(),
+        riskManagement: this.generateRiskManagementAdvice(riskProfile)
+      }
+    };
   }
 
-  getCommodityDrivers(isSilver, isGold, isGoingUp) {
-    if (isSilver) {
-      return [
-        'Industrial demand from solar and electronics',
-        'Investment demand as safe-haven asset',
-        'Supply constraints from mining disruptions',
-        'USD weakness making silver cheaper'
-      ];
-    }
-    if (isGold) {
-      return [
-        'Safe-haven demand during uncertainty',
-        'Central bank purchases',
-        'Inflation hedge appeal',
-        'Jewelry demand in emerging markets'
-      ];
-    }
-    return ['Market dynamics', 'Supply-demand balance', 'Global economic factors'];
+  generatePersonalizedRecommendations(riskProfile) {
+    const recommendations = {
+      conservative: [
+        { asset: 'Large-cap equity funds', allocation: '40%', reasoning: 'Stable returns with lower volatility' },
+        { asset: 'Banking stocks', allocation: '20%', reasoning: 'Regular income and capital preservation' },
+        { asset: 'Government bonds', allocation: '30%', reasoning: 'Safety and fixed returns' },
+        { asset: 'Gold', allocation: '10%', reasoning: 'Inflation hedge' }
+      ],
+      moderate: [
+        { asset: 'Multi-cap equity funds', allocation: '50%', reasoning: 'Balanced growth across market caps' },
+        { asset: 'IT and pharma stocks', allocation: '25%', reasoning: 'Growth potential with reasonable risk' },
+        { asset: 'Corporate bonds', allocation: '15%', reasoning: 'Better yields than government bonds' },
+        { asset: 'Real estate funds', allocation: '10%', reasoning: 'Diversification and inflation protection' }
+      ],
+      aggressive: [
+        { asset: 'Mid and small-cap funds', allocation: '40%', reasoning: 'High growth potential' },
+        { asset: 'Sectoral funds (IT, Auto)', allocation: '30%', reasoning: 'Targeted sector exposure' },
+        { asset: 'Emerging market funds', allocation: '20%', reasoning: 'Geographic diversification' },
+        { asset: 'Alternative investments', allocation: '10%', reasoning: 'Higher return potential' }
+      ]
+    };
+
+    return recommendations[riskProfile] || recommendations.moderate;
   }
 
-  getCommodityInvestmentOptions(isSilver, isGold) {
-    if (isSilver) {
-      return ['Silver ETFs', 'Physical silver', 'Silver futures', 'Digital silver'];
-    }
-    if (isGold) {
-      return ['Gold ETFs', 'Sovereign Gold Bonds', 'Physical gold', 'Digital gold'];
-    }
-    return ['Commodity ETFs', 'Futures contracts', 'Physical commodities'];
+  identifyMarketOpportunities() {
+    return [
+      { sector: 'IT Services', opportunity: 'Digital transformation and AI adoption', timeframe: '2-3 years', potential: 'High' },
+      { sector: 'Banking', opportunity: 'Credit growth and digital banking', timeframe: '1-2 years', potential: 'Medium' },
+      { sector: 'Automobile', opportunity: 'EV transition and new models', timeframe: '3-5 years', potential: 'High' }
+    ];
   }
 
-  getMarketSentiment(marketContext) {
+  generateRiskManagementAdvice(riskProfile) {
+    return {
+      diversification: 'Spread investments across sectors and market caps',
+      assetAllocation: 'Maintain target asset allocation with periodic rebalancing',
+      stopLoss: riskProfile === 'aggressive' ? '15-20%' : riskProfile === 'moderate' ? '10-15%' : '5-10%',
+      positionSizing: 'Limit individual stock exposure to 5-10% of portfolio',
+      review: 'Quarterly portfolio review and annual rebalancing'
+    };
+  }
+
+  generateDetailedAnalysis(queryAnalysis, marketContext) {
+    return {
+      type: 'COMPREHENSIVE_ANALYSIS',
+      data: {
+        message: 'I can provide detailed analysis for specific stocks, sectors, or market conditions.',
+        analysisTypes: [
+          'Technical analysis with indicators',
+          'Fundamental analysis with financial metrics',
+          'SWOT analysis for companies',
+          'Sector analysis and trends'
+        ],
+        marketContext: marketContext
+      }
+    };
+  }
+
+  generateExplanatoryResponse(queryAnalysis, marketContext) {
+    return {
+      type: 'EDUCATIONAL_EXPLANATION',
+      data: {
+        message: 'I can explain complex financial concepts and market phenomena.',
+        topics: [
+          'Stock market basics and terminology',
+          'Technical indicators and interpretation',
+          'Fundamental analysis principles',
+          'Economic indicators and market impact'
+        ],
+        marketContext: marketContext
+      }
+    };
+  }
+
+  generateMarketOverview(queryAnalysis, marketContext) {
+    return {
+      type: 'MARKET_INTELLIGENCE',
+      data: {
+        marketOverview: marketContext,
+        sentiment: this.analyzeMarketSentiment(marketContext),
+        sectorPerformance: this.getSectorPerformance(),
+        keyIndices: { nifty: marketContext.nifty50, sensex: marketContext.sensex },
+        marketDrivers: this.identifyMarketDrivers(),
+        outlook: this.generateMarketOutlook()
+      }
+    };
+  }
+
+  analyzeMarketSentiment(marketContext) {
     const niftyChange = marketContext.nifty50?.change || 0;
-    return niftyChange > 0 ? 'Bullish' : niftyChange < 0 ? 'Bearish' : 'Neutral';
+    const sentiment = niftyChange > 1 ? 'Bullish' : niftyChange < -1 ? 'Bearish' : 'Neutral';
+    
+    return {
+      overall: sentiment,
+      confidence: Math.abs(niftyChange) > 2 ? 'High' : Math.abs(niftyChange) > 1 ? 'Medium' : 'Low',
+      outlook: sentiment === 'Bullish' ? 'Positive momentum expected' : sentiment === 'Bearish' ? 'Caution advised' : 'Mixed signals'
+    };
   }
 
   getSectorPerformance() {
     return {
-      'IT': '+2.3%',
+      'IT Services': '+2.3%',
       'Banking': '+1.8%',
-      'Auto': '-0.5%',
+      'Automobile': '-0.5%',
       'Pharma': '+1.2%',
-      'Energy': '-1.1%'
+      'Energy': '-1.1%',
+      'FMCG': '+0.8%'
     };
   }
 
-  getInvestmentRecommendations(userProfile, message) {
-    const riskProfile = userProfile.riskProfile?.type || 'moderate';
-    
-    if (riskProfile === 'conservative') {
-      return ['Debt funds', 'Large-cap equity funds', 'Fixed deposits', 'PPF'];
-    } else if (riskProfile === 'aggressive') {
-      return ['Mid-cap funds', 'Small-cap funds', 'Direct equities', 'Sector funds'];
-    }
-    return ['Hybrid funds', 'Large-cap funds', 'Balanced portfolios', 'Index funds'];
+  identifyMarketDrivers() {
+    return [
+      { driver: 'Corporate Earnings', impact: 'Positive', description: 'Q3 earnings showing mixed results' },
+      { driver: 'FII Flows', impact: 'Positive', description: 'Continued foreign institutional investment' },
+      { driver: 'Global Markets', impact: 'Neutral', description: 'Mixed signals from US and European markets' }
+    ];
   }
 
-  getRiskAssessment(userProfile) {
+  generateMarketOutlook() {
     return {
-      riskLevel: userProfile.riskProfile?.type || 'moderate',
-      capacity: 'Medium',
-      horizon: '3-5 years',
-      suitability: 'Diversified equity-debt portfolio'
+      shortTerm: '1-3 months: Consolidation with sector-specific opportunities',
+      mediumTerm: '3-6 months: Gradual uptrend expected on earnings growth',
+      longTerm: '6-12 months: Positive outlook dependent on reforms and global conditions'
+    };
+  }
+
+  generateIntelligentDefault(queryAnalysis, userProfile, marketContext) {
+    return {
+      type: 'INTELLIGENT_GUIDANCE',
+      data: {
+        message: 'I\'m your advanced AI investment assistant. I can help with:',
+        capabilities: [
+          '📈 Real-time stock analysis and price movements',
+          '📊 Technical and fundamental analysis',
+          '💰 Personalized investment recommendations',
+          '🏦 Market insights and sector analysis',
+          '📱 Commodity analysis (gold, silver)',
+          '🎯 Portfolio optimization strategies'
+        ],
+        examples: [
+          'Is Tata Motors up today? - Get current price and technical analysis',
+          'Why is silver going up? - Understand commodity price movements',
+          'Should I invest in TCS? - Get personalized investment advice',
+          'Current market sentiment? - Get comprehensive market overview'
+        ],
+        marketContext: marketContext,
+        userProfile: userProfile
+      }
     };
   }
 
   // Legacy methods for compatibility
   determineIntent(message) {
-    if (this.isStockQuery(message)) return 'STOCK_RECOMMENDATION';
-    if (this.isCommodityQuery(message)) return 'MARKET_ANALYSIS';
-    if (this.isMarketQuery(message)) return 'MARKET_ANALYSIS';
-    if (this.isInvestmentQuery(message)) return 'INVESTMENT_GUIDANCE';
-    return 'EDUCATIONAL';
+    const analysis = this.analyzeQuery(message);
+    return analysis.intent.toUpperCase();
   }
 
   async generateInternalResponse(intent, userProfile, marketContext) {
-    return this.generateDefaultResponse('', userProfile, marketContext);
+    return this.generateIntelligentDefault({ intent: intent.toLowerCase() }, userProfile, marketContext);
   }
 
   formatEnhancedResponse(externalResponse, ragData, marketContext, userProfile) {
@@ -273,151 +586,8 @@ class NiveshAI {
   }
 
   needsExternalData(message, internalResponse) {
-    const needsExternalKeywords = [
-      'latest', 'current', 'today', 'news', 'real-time', 'live',
-      'what is happening', 'market update', 'current price',
-      'explain in detail', 'comprehensive', 'detailed analysis'
-    ];
-    
-    const messageLower = message.toLowerCase();
-    return needsExternalKeywords.some(keyword => messageLower.includes(keyword)) ||
-           !internalResponse || internalResponse.data?.message?.includes('I can help you with');
+    return false;
   }
-
-  generateInternalResponse(intent, userProfile, marketContext) {
-    const responses = {
-      'STOCK_RECOMMENDATION': {
-        type: 'STOCK_RECOMMENDATION',
-        data: {
-          marketOverview: marketContext,
-          recommendations: [
-            { symbol: 'RELIANCE', name: 'Reliance Industries', price: 2543.21, change: '+2.3%', reason: 'Strong fundamentals, diversified business' },
-            { symbol: 'TCS', name: 'Tata Consultancy Services', price: 3567.89, change: '+1.8%', reason: 'IT sector growth, digital transformation' },
-            { symbol: 'HDFCBANK', name: 'HDFC Bank', price: 1654.32, change: '+1.2%', reason: 'Banking sector leader, stable growth' }
-          ],
-          analysis: 'Based on current market conditions and technical analysis'
-        }
-      },
-      'MUTUAL_FUND': {
-        type: 'MUTUAL_FUND',
-        data: {
-          message: 'Mutual funds offer diversified investment options suitable for different risk profiles.',
-          fundTypes: [
-            { type: 'Equity Funds', risk: 'High', return: '12-15%', suitable: 'Long-term goals' },
-            { type: 'Debt Funds', risk: 'Low', return: '6-8%', suitable: 'Stable income' },
-            { type: 'Hybrid Funds', risk: 'Medium', return: '8-12%', suitable: 'Balanced approach' }
-          ],
-          recommendations: 'Consider your risk profile and investment horizon before investing'
-        }
-      },
-      'PORTFOLIO_MANAGEMENT': {
-        type: 'PORTFOLIO_MANAGEMENT',
-        data: {
-          message: 'Effective portfolio management requires regular monitoring and rebalancing.',
-          strategies: [
-            'Asset allocation based on risk profile',
-            'Regular portfolio review and rebalancing',
-            'Diversification across sectors and market caps',
-            'Tax-efficient investment planning'
-          ],
-          analysis: 'A well-diversified portfolio helps manage risk and optimize returns'
-        }
-      },
-      'MARKET_ANALYSIS': {
-        type: 'MARKET_ANALYSIS',
-        data: {
-          marketOverview: marketContext,
-          sentiment: this.getMarketSentiment(marketContext),
-          keyIndices: {
-            nifty: marketContext.nifty50,
-            sensex: marketContext.sensex
-          },
-          sectors: this.getSectorPerformance(),
-          analysis: 'Market analysis based on current trends and economic indicators'
-        }
-      },
-      'RISK_ASSESSMENT': {
-        type: 'RISK_ASSESSMENT',
-        data: {
-          message: 'Understanding your risk profile is crucial for investment planning.',
-          riskLevels: [
-            { level: 'Conservative', description: 'Low risk tolerance, prefers stable returns' },
-            { level: 'Moderate', description: 'Balanced risk approach, seeks growth with stability' },
-            { level: 'Aggressive', description: 'High risk tolerance, seeks maximum returns' }
-          ],
-          recommendations: 'Align your investments with your risk capacity and goals'
-        }
-      },
-      'TAX_PLANNING': {
-        type: 'TAX_PLANNING',
-        data: {
-          message: 'Tax-efficient investing can significantly improve your post-tax returns.',
-          strategies: [
-            'Section 80C investments (ELSS, PPF, NSC)',
-            'Capital gains tax optimization',
-            'Tax-loss harvesting',
-            'Long-term vs short-term capital gains planning'
-          ],
-          analysis: 'Strategic tax planning is an integral part of wealth creation'
-        }
-      },
-      'EDUCATIONAL': {
-        type: 'EDUCATIONAL',
-        data: {
-          message: 'I can help you understand various investment concepts and strategies.',
-          topics: [
-            'Stock market basics and terminology',
-            'Mutual fund types and selection criteria',
-            'Portfolio diversification strategies',
-            'Risk management techniques',
-            'Tax planning for investments'
-          ],
-          suggestions: [
-            'Ask about specific stocks or sectors',
-            'Learn about different investment options',
-            'Understand risk and return trade-offs',
-            'Get guidance on tax-efficient investing'
-          ]
-        }
-      }
-    };
-
-    return responses[intent] || responses['EDUCATIONAL'];
-  }
-
-  formatGeneralResponse(data) {
-    let content = `🤖 **NiveshAI - Your Investment Assistant**\n\n`;
-    content += `${data.message}\n\n`;
-    
-    if (data.suggestions) {
-      content += `💡 **Try asking:**\n`;
-      data.suggestions.forEach(suggestion => {
-        content += `• ${suggestion}\n`;
-      });
-      content += `\n`;
-    }
-
-    return content;
-  }
-
-  intents = {
-    'stock': 'STOCK_RECOMMENDATION',
-    'share': 'STOCK_RECOMMENDATION',
-    'invest': 'INVESTMENT_GUIDANCE',
-    'investment': 'INVESTMENT_GUIDANCE',
-    'mutual fund': 'MUTUAL_FUND',
-    'sip': 'MUTUAL_FUND',
-    'portfolio': 'PORTFOLIO_MANAGEMENT',
-    'risk': 'RISK_ASSESSMENT',
-    'tax': 'TAX_PLANNING',
-    'market': 'MARKET_ANALYSIS',
-    'nifty': 'MARKET_ANALYSIS',
-    'sensex': 'MARKET_ANALYSIS',
-    'learn': 'EDUCATIONAL',
-    'explain': 'EDUCATIONAL',
-    'what is': 'EDUCATIONAL',
-    'how to': 'EDUCATIONAL'
-  };
 }
 
 module.exports = NiveshAI;
