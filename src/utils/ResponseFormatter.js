@@ -19,6 +19,8 @@ class ResponseFormatter {
 
   formatContent(response) {
     switch (response.type) {
+      case 'AI_RESPONSE':
+        return this.formatAIResponse(response.data);
       case 'ADVANCED_STOCK_ANALYSIS':
         return this.formatAdvancedStockAnalysis(response.data);
       case 'ADVANCED_COMMODITY_ANALYSIS':
@@ -375,8 +377,34 @@ class ResponseFormatter {
     return content;
   }
 
+  formatAIResponse(data) {
+    let content = '';
+    
+    // If the message already contains markdown formatting, use it as-is
+    if (data.message.includes('**') || data.message.includes('#') || data.message.includes('*')) {
+      content = data.message;
+    } else {
+      // Otherwise, format it nicely
+      content = `🤖 **NiveshAI Response**\n\n${data.message}`;
+    }
+    
+    // Add source information
+    if (data.source && data.source !== 'NiveshAI') {
+      content += `\n\n---\n*Source: ${data.source}*`;
+    }
+    
+    // Add market context if available
+    if (data.marketContext) {
+      content += `\n\n**Market Context:**\n`;
+      content += `• Nifty 50: ${data.marketContext.nifty50?.current || 'N/A'} (${data.marketContext.nifty50?.changePercent || 'N/A'}%)\n`;
+      content += `• Sensex: ${data.marketContext.sensex?.current || 'N/A'} (${data.marketContext.sensex?.changePercent || 'N/A'}%)\n`;
+      content += `• Sentiment: ${data.marketContext.marketSentiment || 'N/A'}`;
+    }
+    
+    return content;
+  }
+
   formatAdvancedStockAnalysis(data) {
-    let content = `📈 **${data.stock.name} (${data.stock.symbol}) - Advanced Analysis**\n\n`;
     
     content += `**Current Market Status:**\n`;
     content += `• **Current Price:** ₹${data.currentPrice}\n`;
