@@ -18,6 +18,11 @@ class ResponseFormatter {
   }
 
   formatContent(response) {
+    // Handle the new AI response structure
+    if (response.data && response.data.message) {
+      return response.data.message;
+    }
+    
     switch (response.type) {
       case 'AI_RESPONSE':
         return this.formatAIResponse(response.data);
